@@ -1,0 +1,21 @@
+
+{% macro render_field(field) %}
+<dt>
+    <!-- field.label field.**kwargs()をやっているだけ -->
+    {{field.label}}
+    <dd>
+        {{field(**kwargs) | safe}}
+        <!-- wtformsのValidationErrorがあれば表示 -->
+        {% if field.errors %}
+        <ul class="errors">
+            {% for error in field.errors %}
+            <li>{{error}}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </dd>
+</dt>
+
+
+
+{% endmacro %}
