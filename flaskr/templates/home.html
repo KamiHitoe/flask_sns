@@ -6,6 +6,12 @@
 {% block container %}
 <h1>ホームだよ、ゆっくりしていってね</h1>
 
+{% if current_user.is_authenticated %}
+    <p>{{current_user.username}} さんが入室されました</p>
+{% else %}
+    <p>ログインするのじゃ</p>
+{% endif %}
+
 
 {% endblock %}
 

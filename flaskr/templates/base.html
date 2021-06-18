@@ -9,12 +9,17 @@
     <nav>
         <ul>
             <li><a href="{{url_for('login')}}">ログイン</a></li>
+            <li><a href="{{url_for('logout')}}">ログアウト</a></li>
+            <li><a href="{{url_for('register')}}">登録</a></li>
         </ul>
     </nav>
     <body>
+        <!-- container -> row -> col -->
         <div class="container">
-        {% block container %}
-        {% endblock %}
+            <div class="row">
+                {% block container %}
+                {% endblock %}
+            </div>
         </div>
     </body>
 </html>
