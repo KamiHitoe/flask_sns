@@ -29,7 +29,7 @@ class RegisterForm(Form):
 
     def validate_email(self, field):
         """ これはfieldごとにcheckされる？ """
-        if User.select_by_email(field.data):
+        if User.search_by_email(field.data):
             raise ValidationError('すでに登録されているメールアドレスです')
 
 
@@ -44,3 +44,10 @@ class SettingForm(Form):
 class UserSearchForm(Form):
     username = StringField('ユーザ名', validators=[DataRequired()])
     submit = SubmitField('ユーザ検索')
+
+
+class ConnectForm(Form):
+    to_user_id = HiddenField()
+    connect_status = HiddenField()
+    submit = SubmitField()
+
