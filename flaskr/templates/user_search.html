@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% from "_formhelpers.html" import render_field %}
+
+{% block title%}
+    User Search{{super()}}
+{% endblock %}
+
+{% block container %}
+<h1>ユーザ検索画面</h1>
+
+<!-- flashを実行する -->
+{% for message in get_flashed_messages() %}
+<p>※{{message}}</p>
+{% endfor %}
+
+<form method='POST'>
+    {{render_field(form.username)}}
+    {{form.submit()}}
+</form>
+
+{% if user %}
+    <table>
+        <tr>
+            <th>ユーザ名</th>
+            <th>ユーザ画像</th>
+            <th>友達申請</th>
+        </tr>
+
+        <tr>
+            <td>{{user.username}}</td>
+            <td><img class="image-small" src="{{url_for('static', filename=user.picture_path)}}"></td>
+            <td><button type="button" class="btn btn-info">友達申請する</button></td>
+        </tr>
+    </table>
+{% endif %}
+
+{% endblock %}

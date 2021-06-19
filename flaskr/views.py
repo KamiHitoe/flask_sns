@@ -5,11 +5,12 @@ from flask import (
 
 )
 from flask_login import login_required, login_user, logout_user, current_user
+from datetime import datetime
 
 # postgresqlではデータ格納先のpath指定もmigrateも行わない
 app = Flask(__name__)
 from flaskr.models import db, User
-from flaskr.forms import LoginForm, RegisterForm
+from flaskr.forms import LoginForm, RegisterForm, SettingForm, UserSearchForm
 
 
 @app.route('/', methods=['GET'])
@@ -50,6 +51,23 @@ def register():
     return render_template('register.html', form=form)
 
 
+@app.route('/forgot_password', methods=['GET', 'POST'])
+def forgot_password():
+    """ 要はパスワードをアップグレードしたい """
+    form = LoginForm(request.form)
+    user = None
+    if request.method == 'POST':
+        email = form.email.data
+        user = User.select_by_email(email)
+        if form.password.data:
+            with db.session.begin(subtransactions=True):
+                user.reset_password(form.password.data)
+            db.session.commit()
+            return redirect(url_for('login'))
+        return render_template('forgot_password.html', form=form, user=user)
+    return render_template('forgot_password.html', form=form, user=user)
+
+
 @app.route('/logout')
 @login_required
 def logout():
@@ -57,9 +75,42 @@ def logout():
     return redirect(url_for('home'))
 
 
-@app.route('/user')
+@app.route('/setting', methods=['GET', 'POST'])
 @login_required
-def user():
-    return 'login success'
+def setting():
+    form = SettingForm(request.form)
+    user_id = current_user.get_id()
+    if request.method == 'POST':
+        user = User.select_by_id(user_id)
+        with db.session.begin(subtransactions=True):
+            user.username = form.username.data
+            user.email = form.email.data
+            user.update_at = datetime.now()
+            if form.comment.data:
+                user.comment = form.comment.data
+            # fileの中身を読込
+            file = request.files[form.picture_path.name].read()
+            if file:
+                file_name = user_id + '_' + str(int(datetime.now().timestamp())) + '.jpg'
+                picture_path = 'flaskr/static/user_images/' + file_name
+                # picture_pathの箱にfileの中身を書き込む
+                open(picture_path, 'wb').write(file)
+                user.picture_path = 'user_images/' + file_name
+        db.session.commit()
+        return redirect(url_for('home'))
+    return render_template('setting.html', form=form)
+
+
+@app.route('/user_search', methods=['GET', 'POST'])
+@login_required
+def user_search():
+    form = UserSearchForm(request.form)
+    user = None
+    if request.method == 'POST' and form.validate():
+        user = User.select_by_username(form.username.data)
+        if user:
+            return render_template('user_search.html', form=form, user=user)
+        flash('ユーザが存在しません')
+    return render_template('user_search.html', form=form, user=user)
 
 

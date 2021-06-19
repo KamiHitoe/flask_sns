@@ -4,10 +4,16 @@
 {% endblock %}
 
 {% block container %}
-<h1>ホームだよ、ゆっくりしていってね</h1>
+<h1>ホーム画面</h1>
 
 {% if current_user.is_authenticated %}
-    <p>{{current_user.username}} さんが入室されました</p>
+    {% if current_user.picture_path %}
+        <img class="image-big" src="{{url_for('static', filename=current_user.picture_path)}}">
+    {% else %}
+    <img class="image-big" src="{{url_for('static', filename='user_images/profile_icon.png')}}">
+    {% endif %}
+    <p>ユーザ名：{{current_user.username}}</p>
+    <p>一言コメント：{{current_user.comment}}</p>
 {% else %}
     <p>ログインするのじゃ</p>
 {% endif %}

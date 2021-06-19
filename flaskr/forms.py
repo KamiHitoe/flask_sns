@@ -2,7 +2,7 @@
 from wtforms.form import Form
 from wtforms.fields import (
     IntegerField, StringField, TextField, TextAreaField, PasswordField,
-    HiddenField, SubmitField
+    HiddenField, SubmitField, FileField
 )
 from wtforms.validators import DataRequired, Email, EqualTo
 from wtforms import ValidationError
@@ -32,3 +32,15 @@ class RegisterForm(Form):
         if User.select_by_email(field.data):
             raise ValidationError('すでに登録されているメールアドレスです')
 
+
+class SettingForm(Form):
+    username = StringField('ユーザ名', validators=[DataRequired()])
+    email = StringField('メールアドレス', validators=[DataRequired(), Email('メールアドレスでお願いマッスル')])
+    comment = TextAreaField('一言コメント')
+    picture_path = FileField('画像ファイルアップロード')
+    submit = SubmitField('更新')
+
+
+class UserSearchForm(Form):
+    username = StringField('ユーザ名', validators=[DataRequired()])
+    submit = SubmitField('ユーザ検索')
