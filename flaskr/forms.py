@@ -53,3 +53,8 @@ class ConnectForm(Form):
     connect_status = HiddenField()
     submit = SubmitField()
 
+
+class MessageForm(Form):
+    to_user_id = HiddenField()
+    message = TextAreaField('メッセージを入力', validators=[DataRequired()], default='')
+    submit = SubmitField('送信する')
