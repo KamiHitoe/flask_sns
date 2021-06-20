@@ -9,10 +9,10 @@ from datetime import datetime
 from flask import url_for
 from sqlalchemy import and_, or_, desc
 from sqlalchemy.orm import aliased
+import os
 
-
-app.config['SQLALCHEMY_DATABASE_URI'] = \
-    'postgresql://postgres:admin@localhost/flask_sns'
+DB_URI = os.environ.get('DATABASE_URL') or 'postgresql://postgres:admin@localhost/flask_sns'
+app.config['SQLALCHEMY_DATABASE_URI'] = DB_URI
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config["SECRET_KEY"] = 'mysecret'
 
