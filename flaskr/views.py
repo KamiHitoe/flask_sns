@@ -1,4 +1,5 @@
 
+""" フォームから変数を受け取り、DBにCRUD操作をするコントローラ """
 
 from flask import (
     Flask, render_template, request, redirect, url_for, flash, 
@@ -20,8 +21,8 @@ def home():
     connect_form = ConnectForm()
     friends = requested_friends = None
     if current_user.is_authenticated:
-        friends = User.search_friends()
-        requested_friends = User.search_requested_friends()
+        friends = User.select_friends()
+        requested_friends = User.select_requested_friends()
     return render_template('home.html', 
     friends=friends, requested_friends=requested_friends, connect_form=connect_form)
 
@@ -32,7 +33,7 @@ def login():
     if request.method == 'POST' and form.validate():
         email = form.email.data
         password = form.password.data
-        user = User.search_by_email(email)
+        user = User.select_by_email(email)
         if user and user.check_password(password):
             """ ユーザに対してログイン処理を施す """
             login_user(user)
@@ -66,7 +67,7 @@ def forgot_password():
     user = None
     if request.method == 'POST':
         email = form.email.data
-        user = User.search_by_email(email)
+        user = User.select_by_email(email)
         if form.password.data:
             with db.session.begin(subtransactions=True):
                 user.reset_password(form.password.data)
@@ -89,7 +90,7 @@ def setting():
     form = SettingForm(request.form)
     user_id = current_user.get_id()
     if request.method == 'POST':
-        user = User.search_by_id(user_id)
+        user = User.select_by_id(user_id)
         with db.session.begin(subtransactions=True):
             user.username = form.username.data
             user.email = form.email.data
@@ -118,7 +119,7 @@ def user_search():
     # session['url'] = 'user_search'
     users = None
     if request.method == 'POST' and form.validate():
-        users = User.search_by_username(form.username.data)
+        users = User.select_by_username(form.username.data)
         if users:
             return render_template('user_search.html', form=form, connect_form=connect_form, users=users)
         flash('ユーザが存在しません')
@@ -139,7 +140,7 @@ def user_connect():
     elif form.connect_status.data == 'approve':
         from_user_id = form.to_user_id.data
         to_user_id = current_user.get_id()
-        connect = UserConnect.search_connect(from_user_id, to_user_id)
+        connect = UserConnect.select_connect(from_user_id, to_user_id)
         with db.session.begin(subtransactions=True):
             connect.status = 2
         db.session.commit()
@@ -151,7 +152,7 @@ def user_connect():
 @login_required
 def delete_connect():
     id = request.form['id']
-    connect = UserConnect.search_id(id, current_user.get_id())
+    connect = UserConnect.select_id(id, current_user.get_id())
     with db.session.begin(subtransactions=True):
         db.session.delete(connect)
     db.session.commit()
