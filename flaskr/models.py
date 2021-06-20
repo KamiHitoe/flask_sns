@@ -1,4 +1,6 @@
 
+""" DBのtable設計とCRUDメソッド群 """
+
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, current_user
 from flaskr.views import app
@@ -21,7 +23,7 @@ login_manager.login_message = 'ログインしてくださいね～'
 
 @login_manager.user_loader
 def load_user(user_id):
-    """ user_idに対して、Userインスタンスを返す """
+    """ LoginManagerをDBに対して動作させるためのメソッド """
     return User.query.get(user_id)
 
 
@@ -38,6 +40,7 @@ class User(db.Model, UserMixin):
     update_at = db.Column(db.DateTime, default=datetime.now)
 
     def __init__(self, username, email, password):
+        """ ユーザ名、メール、パスワードが入力必須 """
         self.username = username
         self.email = email
         self.password = generate_password_hash(password).decode('utf-8')
@@ -47,20 +50,22 @@ class User(db.Model, UserMixin):
         return check_password_hash(self.password, password)
 
     def reset_password(self, password):
+        """ 再設定されたパスワードをDBにアップデート """
         self.password = generate_password_hash(password).decode('utf-8')
 
     @classmethod
-    def search_by_email(cls, email):
-        """ Userクラスからemailに合致したインスタンスを返す """
+    def select_by_email(cls, email):
+        """ UserテーブルからemailでSELECTされたインスタンスを返す """
         return cls.query.filter_by(email=email).first()
 
     @classmethod
-    def search_by_id(cls, id):
+    def select_by_id(cls, id):
+        """ UserテーブルからidでSELECTされたインスタンスを返す """
         return cls.query.get(id)
 
     @classmethod
-    def search_by_username(cls, username):
-        """ UserConnectと外部結合させた上でusernameでUserを検索 """
+    def select_by_username(cls, username):
+        """ UserConnectと外部結合させた上で、UserテーブルからusernameでSELECTされたインスタンスを返す """
         user_connect1 = aliased(UserConnect)  # UserConnectと紐づけられたクエリ
         user_connect2 = aliased(UserConnect)
         return cls.query.filter(
@@ -84,10 +89,9 @@ class User(db.Model, UserMixin):
             user_connect2.status.label('joined_status_from_user'),
         ).all()
 
-
     @classmethod
-    def search_friends(cls):
-        """ UserConnectを紐づけて、Userインスタンスを返す """
+    def select_friends(cls):
+        """ UserConnectを紐づけて、current_userとstatus==2のUserインスタンスを返す """
         return cls.query.join(
             UserConnect,
             or_(
@@ -105,7 +109,8 @@ class User(db.Model, UserMixin):
         ).all()
 
     @classmethod
-    def search_requested_friends(cls):
+    def select_requested_friends(cls):
+        """ UserConnectを紐づけて、current_userをtoとしてstatus==1のUserインスタンスを返す """
         return cls.query.join(
             UserConnect,
             and_(
@@ -117,10 +122,10 @@ class User(db.Model, UserMixin):
 
 
 class UserConnect(db.Model):
-    """ Userの友達状態を記録する、Userと外部結合させる """
+    """ Userの友達状態を記録するテーブル """
     id = db.Column(db.Integer, primary_key=True)
-    from_user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    to_user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    from_user_id = db.Column(db.Integer, db.ForeignKey('user.id'))  # user.idを外部キーとする
+    to_user_id = db.Column(db.Integer, db.ForeignKey('user.id'))  # user.idを外部キーとする
     status = db.Column(db.Integer, default=0)
     create_at = db.Column(db.DateTime, default=datetime.now)  # datetime.now()では変になる
     update_at = db.Column(db.DateTime, default=datetime.now)
@@ -131,15 +136,16 @@ class UserConnect(db.Model):
         self.status = status
 
     @classmethod
-    def search_connect(cls, from_user_id, to_user_id):
+    def select_connect(cls, from_user_id, to_user_id):
+        """ fromとtoを指定してSELECTされた友達関係を返す """
         return cls.query.filter_by(
             from_user_id = from_user_id,
             to_user_id = to_user_id
             ).first()
 
     @classmethod
-    def search_id(cls, id1, id2):
-        """ fromとtoの対応をするユーザのconnectを返す """
+    def select_id(cls, id1, id2):
+        """ 1対の友達関係をSELECTして友達関係を返す """
         return cls.query.filter(
             or_(
                 and_(

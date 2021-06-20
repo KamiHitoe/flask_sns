@@ -1,4 +1,6 @@
 
+""" ユーザがtemplatesを通して変数を返すためのフォーム群 """
+
 from wtforms.form import Form
 from wtforms.fields import (
     IntegerField, StringField, TextField, TextAreaField, PasswordField,
@@ -29,7 +31,7 @@ class RegisterForm(Form):
 
     def validate_email(self, field):
         """ これはfieldごとにcheckされる？ """
-        if User.search_by_email(field.data):
+        if User.select_by_email(field.data):
             raise ValidationError('すでに登録されているメールアドレスです')
 
 
