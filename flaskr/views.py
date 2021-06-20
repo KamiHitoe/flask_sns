@@ -3,18 +3,20 @@
 
 from flask import (
     Flask, render_template, request, redirect, url_for, flash, 
-    session, 
+    session, jsonify, 
 )
 from flask_login import login_required, login_user, logout_user, current_user
 from datetime import datetime
 
 # postgresqlではデータ格納先のpath指定もmigrateも行わない
 app = Flask(__name__)
-from flaskr.models import db, User, UserConnect
+from flaskr.models import db, User, UserConnect, Message
 from flaskr.forms import (
     LoginForm, RegisterForm, SettingForm, UserSearchForm, 
-    ConnectForm, 
+    ConnectForm, MessageForm, 
 )
+from flaskr.utils.ajax_format import make_message_format
+
 
 @app.route('/', methods=['GET'])
 def home():
@@ -158,5 +160,51 @@ def delete_connect():
     db.session.commit()
     return redirect(url_for('home'))
 
+
+@app.route('/message/<to_user_id>', methods=['GET', 'POST'])
+@login_required
+def message(to_user_id):  # Homeからurl_forで受け取る
+    is_friend = UserConnect.is_friend(to_user_id)
+    if not is_friend:
+        # 友達じゃなったらホームに返す
+        return redirect(url_for('home'))
+    form = MessageForm()
+    from_user_id = current_user.get_id()
+    friend = User.select_by_id(to_user_id)
+    messages = Message.select_messages(to_user_id)
+
+    # 相手メッセージの既読フラグを更新する
+    read_messages = [message for message in messages if message.from_user_id == friend.id]
+    if read_messages:
+        with db.session.begin(subtransactions=True):
+            for read_message in read_messages:
+                read_message.is_read = True
+        db.session.commit()
+
+    if request.method == 'POST':
+        """ 投稿があればDBをアップグレードして更新 """
+        message = request.form['message']
+        new_message = Message(from_user_id, to_user_id, message)
+        with db.session.begin(subtransactions=True):
+            db.session.add(new_message)
+        db.session.commit()
+        return redirect(url_for('message', to_user_id=friend.id))
+    return render_template('message.html', form=form, friend=friend, messages=messages)
+
+
+@app.route('/message_ajax', methods=['GET'])
+@login_required
+def message_ajax():
+    user_id = request.args.get('user_id', -1, type=int)
+    user = User.select_by_id(user_id)
+    unread_messages = Message.select_unread_messages(user_id)
+    # 相手メッセージの既読フラグを更新する
+    if unread_messages:
+        with db.session.begin(subtransactions=True):
+            for unread_message in unread_messages:
+                unread_message.is_read = True
+        db.session.commit()
+
+    return jsonify(data=make_message_format(user, unread_messages))
 
 

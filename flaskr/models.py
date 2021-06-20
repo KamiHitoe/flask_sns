@@ -11,7 +11,10 @@ from sqlalchemy import and_, or_, desc
 from sqlalchemy.orm import aliased
 import os
 
-DB_URI = os.environ.get('DATABASE_URL').replace("://", "ql://", 1) or 'postgresql://postgres:admin@localhost/flask_sns'
+if os.environ.get('DATABASE_URL'):
+    DB_URI = os.environ.get('DATABASE_URL').replace("://", "ql://", 1)
+else:
+    DB_URI = 'postgresql://postgres:admin@localhost/flask_sns'
 app.config['SQLALCHEMY_DATABASE_URI'] = DB_URI
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config["SECRET_KEY"] = 'mysecret'
@@ -158,5 +161,75 @@ class UserConnect(db.Model):
                 ),
             ),
         ).first()
+
+    @classmethod
+    def is_friend(cls, to_user_id):
+        result = cls.query.filter(
+            or_(
+                and_(
+                    UserConnect.from_user_id == current_user.get_id(),
+                    UserConnect.to_user_id == to_user_id,
+                    UserConnect.status == 2,
+                ),
+                and_(
+                    UserConnect.from_user_id == to_user_id,
+                    UserConnect.to_user_id == current_user.get_id(),
+                    UserConnect.status == 2,
+                ),
+            ),
+        ).first()
+        if result:
+            return True
+        else:
+            return False
+
+
+class Message(db.Model):
+    """ メッセージを記録するテーブル """
+    id = db.Column(db.Integer, primary_key=True)
+    from_user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    to_user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    message = db.Column(db.Text)
+    is_read = db.Column(db.Boolean, default=False)
+    is_checked = db.Column(db.Boolean, default=False)
+    create_at = db.Column(db.DateTime, default=datetime.now)
+    create_at = db.Column(db.DateTime, default=datetime.now)
+
+    def __init__(self, from_user_id, to_user_id, message):
+        self.from_user_id = from_user_id
+        self.to_user_id = to_user_id
+        self.message = message
+
+    @classmethod
+    def select_messages(cls, friend_id):
+        return cls.query.filter(
+            or_(
+                and_(
+                    Message.from_user_id == current_user.get_id(),
+                    Message.to_user_id == friend_id,
+                ),
+                and_(
+                    Message.from_user_id == friend_id,
+                    Message.to_user_id == current_user.get_id(),
+                ),
+            ),
+        ).all()
+
+    @classmethod
+    def select_unread_messages(cls, friend_id):
+        return cls.query.filter(
+            or_(
+                and_(
+                    Message.from_user_id == current_user.get_id(),
+                    Message.to_user_id == friend_id,
+                    Message.is_read == False,
+                ),
+                and_(
+                    Message.from_user_id == friend_id,
+                    Message.to_user_id == current_user.get_id(),
+                    Message.is_read == False,
+                ),
+            ),
+        ).all()
 
 
