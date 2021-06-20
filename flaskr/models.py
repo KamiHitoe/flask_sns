@@ -11,7 +11,7 @@ from sqlalchemy import and_, or_, desc
 from sqlalchemy.orm import aliased
 import os
 
-DB_URI = os.environ.get('DATABASE_URL') or 'postgresql://postgres:admin@localhost/flask_sns'
+DB_URI = os.environ.get('DATABASE_URL').replace("://", "ql://", 1) or 'postgresql://postgres:admin@localhost/flask_sns'
 app.config['SQLALCHEMY_DATABASE_URI'] = DB_URI
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config["SECRET_KEY"] = 'mysecret'
