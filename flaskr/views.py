@@ -204,7 +204,6 @@ def message_ajax():
             for unread_message in unread_messages:
                 unread_message.is_read = True
         db.session.commit()
-
     return jsonify(data=make_message_format(user, unread_messages))
 
 

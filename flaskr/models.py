@@ -217,19 +217,10 @@ class Message(db.Model):
 
     @classmethod
     def select_unread_messages(cls, friend_id):
-        return cls.query.filter(
-            or_(
-                and_(
-                    Message.from_user_id == current_user.get_id(),
-                    Message.to_user_id == friend_id,
-                    Message.is_read == False,
-                ),
-                and_(
-                    Message.from_user_id == friend_id,
-                    Message.to_user_id == current_user.get_id(),
-                    Message.is_read == False,
-                ),
-            ),
+        return cls.query.filter_by(
+            from_user_id = friend_id,
+            to_user_id = current_user.get_id(),
+            is_read = False,
         ).all()
 
 
