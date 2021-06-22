@@ -1,10 +1,4 @@
 
-# 注意事項
-- flask_loginをimportする際はmodelsでload_userを定義しないとtemplatesが読み込まれない
-- postgresqlを使う際は、create databaseとdb.create_all()はコマンドで実行する必要がある
-- herokuでPostgreSQLを使う場合はアドオンをインストールしてURIを変更する必要がある
-
-
 # 機能要件
 - ログイン機能
 - ユーザ情報編集機能

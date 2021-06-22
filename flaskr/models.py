@@ -4,6 +4,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, current_user
 from flaskr.views import app
+from flaskr.config import SECRET_KEY, PSQL_PASSWORD
 from flask_bcrypt import generate_password_hash, check_password_hash
 from datetime import datetime
 from flask import url_for
@@ -14,10 +15,10 @@ import os
 if os.environ.get('DATABASE_URL'):
     DB_URI = os.environ.get('DATABASE_URL').replace("://", "ql://", 1)
 else:
-    DB_URI = 'postgresql://postgres:admin@localhost/flask_sns'
+    DB_URI = 'postgresql://postgres:'+ PSQL_PASSWORD + '@localhost/flask_sns'
 app.config['SQLALCHEMY_DATABASE_URI'] = DB_URI
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config["SECRET_KEY"] = 'mysecret'
+app.config["SECRET_KEY"] = SECRET_KEY
 
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
@@ -193,7 +194,7 @@ class Message(db.Model):
     is_read = db.Column(db.Boolean, default=False)
     is_checked = db.Column(db.Boolean, default=False)
     create_at = db.Column(db.DateTime, default=datetime.now)
-    create_at = db.Column(db.DateTime, default=datetime.now)
+    update_at = db.Column(db.DateTime, default=datetime.now)
 
     def __init__(self, from_user_id, to_user_id, message):
         self.from_user_id = from_user_id

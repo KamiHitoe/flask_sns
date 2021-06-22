@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% from "_helpers.html" import render_field %}
+{% from "_helpers.html" import validate_picture %}
 
 {% block title%}
     User Search{{super()}}
@@ -32,11 +33,7 @@
                 <td>{{loop.index}}</td>
                 <td>{{user.username}}</td>
                 <td>
-                    {% if user.picture_path %}
-                    <img class="image-small" src="{{url_for('static', filename=user.picture_path)}}">
-                    {% else %}
-                    <img class="image-small" src="{{url_for('static', filename='user_images/profile_icon.png')}}">
-                    {% endif %}
+                    {{validate_picture(user, 'image-small')}}
                 </td>
                 <td>{{user.comment}}</td>
                 <td>
